@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARX Kyvera — Run Everything. Own Everything.</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal:     #1ccccc;
+    --teal-dim: rgba(28,204,204,0.15);
+    --teal-border: rgba(28,204,204,0.2);
+    --black:    #080c0c;
+    --dark:     #0c1414;
+    --mid:      #0f1a1a;
+    --text:     #ffffff;
+    --sub:      rgba(255,255,255,0.42);
+    --muted:    rgba(255,255,255,0.22);
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--black);
+    color: var(--text);
+  }
+
+  #scroller {
+    width: 100%; height: 100%;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+  }
+  #scroller::-webkit-scrollbar { display: none; }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 56px;
+    background: rgba(8,12,12,0.9);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--teal-border);
+    transform: translateY(-100%);
+    transition: transform 0.45s cubic-bezier(0.4,0,0.2,1);
+  }
+  nav.visible { transform: translateY(0); }
+
+  .nav-logo {
+    font-size: 18px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--teal);
+  }
+  .nav-logo span { color: rgba(255,255,255,0.5); font-weight: 300; font-size: 13px; margin-left: 8px; letter-spacing: 0.05em; }
+
+  .nav-links { display: flex; gap: 34px; list-style: none; align-items: center; }
+  .nav-links a {
+    color: rgba(255,255,255,0.45); text-decoration: none;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+    transition: color 0.2s; cursor: pointer;
+  }
+  .nav-links a:hover { color: var(--teal); }
+  .nav-back {
+    color: var(--teal) !important;
+    border: 1px solid var(--teal-border);
+    padding: 6px 16px; border-radius: 3px;
+  }
+  .nav-back:hover { background: var(--teal-dim) !important; }
+
+  /* ─── SLIDES ─── */
+  .slide {
+    width: 100%; height: 100vh;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* ══ HERO ══ */
+  #hero {
+    background: var(--black);
+    text-align: center;
+    padding: 80px 40px 60px;
+    justify-content: flex-start;
+  }
+
+  #hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 55% at 50% 0%, rgba(28,204,204,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Zigzags */
+  .zz {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    height: 72%; pointer-events: none;
+    opacity: 0; transition: opacity 1.2s ease 0.8s;
+  }
+  .zz-left  { left: 28px; }
+  .zz-right { right: 28px; }
+  #hero.revealed .zz { opacity: 1; }
+
+  /* Hero wordmark */
+  .hero-wordmark {
+    margin-bottom: 24px;
+    opacity: 0; transform: scale(0.9) translateY(20px);
+    transition: opacity 0.9s ease 0.1s, transform 0.9s ease 0.1s;
+  }
+  #hero.revealed .hero-wordmark { opacity: 1; transform: scale(1) translateY(0); }
+
+  .wordmark-by {
+    font-size: 11px; font-weight: 400; letter-spacing: 0.3em;
+    text-transform: uppercase; color: rgba(255,255,255,0.3);
+    margin-bottom: 8px;
+  }
+
+  .wordmark-name {
+    font-size: clamp(64px, 14vw, 180px);
+    font-weight: 800; letter-spacing: -0.04em; line-height: 0.9;
+    color: var(--teal);
+    text-shadow: 0 0 60px rgba(28,204,204,0.25), 0 0 120px rgba(28,204,204,0.1);
+  }
+
+  .hero-eyebrow {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.35em; text-transform: uppercase;
+    color: rgba(255,255,255,0.35); margin-bottom: 10px;
+    opacity: 0; transform: translateY(18px);
+    transition: opacity 0.8s ease 0.55s, transform 0.8s ease 0.55s;
+  }
+  #hero.revealed .hero-eyebrow { opacity: 1; transform: translateY(0); }
+
+  .hero-headline {
+    font-size: clamp(22px, 3.5vw, 42px); font-weight: 700;
+    line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 14px;
+    opacity: 0; transform: translateY(18px);
+    transition: opacity 0.8s ease 0.75s, transform 0.8s ease 0.75s;
+  }
+  #hero.revealed .hero-headline { opacity: 1; transform: translateY(0); }
+  .hero-headline span { color: var(--teal); }
+
+  .hero-sub {
+    font-size: clamp(13px, 1.6vw, 16px); font-weight: 300;
+    color: var(--sub); max-width: 480px; line-height: 1.78; margin-bottom: 28px;
+    opacity: 0; transform: translateY(18px);
+    transition: opacity 0.8s ease 0.95s, transform 0.8s ease 0.95s;
+  }
+  #hero.revealed .hero-sub { opacity: 1; transform: translateY(0); }
+
+  .hero-cta {
+    display: flex; gap: 14px; justify-content: center;
+    opacity: 0; transform: translateY(18px);
+    transition: opacity 0.8s ease 1.15s, transform 0.8s ease 1.15s;
+  }
+  #hero.revealed .hero-cta { opacity: 1; transform: translateY(0); }
+
+  .scroll-hint {
+    position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    opacity: 0; transition: opacity 0.8s ease 1.6s;
+  }
+  #hero.revealed .scroll-hint { opacity: 1; }
+  .scroll-hint span { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.2); }
+  .scroll-line {
+    width: 1px; height: 44px;
+    background: linear-gradient(to bottom, rgba(28,204,204,0.6), transparent);
+    animation: scrollPulse 2.2s ease-in-out infinite;
+  }
+
+  /* ══ FEATURE SLIDES ══ */
+  .feature-slide { background: var(--dark); }
+  .feature-slide:nth-child(even) { background: var(--mid); }
+
+  .feature-slide::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(to right, transparent, var(--teal-border), transparent);
+  }
+
+  .feature-inner {
+    max-width: 1060px; width: 100%; padding: 0 60px;
+    display: grid; grid-template-columns: 1fr 1.4fr; gap: 80px; align-items: center;
+  }
+
+  .feature-inner.reverse { direction: rtl; }
+  .feature-inner.reverse > * { direction: ltr; }
+
+  .feature-left { }
+
+  .feat-number {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 16px;
+    opacity: 0; transition: opacity 0.6s ease 0.1s;
+  }
+  .feature-slide.revealed .feat-number { opacity: 1; }
+
+  .feat-icon {
+    width: 56px; height: 56px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; margin-bottom: 24px;
+    background: var(--teal-dim);
+    border: 1px solid var(--teal-border);
+    opacity: 0; transform: scale(0.7);
+    transition: opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s;
+  }
+  .feature-slide.revealed .feat-icon { opacity: 1; transform: scale(1); }
+
+  .feat-title {
+    font-size: clamp(28px, 4vw, 48px); font-weight: 700;
+    line-height: 1.08; letter-spacing: -0.025em; color: #fff; margin-bottom: 12px;
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.8s ease 0.3s, transform 0.8s ease 0.3s;
+  }
+  .feature-slide.revealed .feat-title { opacity: 1; transform: translateY(0); }
+  .feat-title span { color: var(--teal); }
+
+  .feat-line {
+    width: 0; height: 2px; background: var(--teal); margin-top: 24px;
+    transition: width 0.9s ease 0.7s;
+  }
+  .feature-slide.revealed .feat-line { width: 48px; }
+
+  .feature-right { }
+
+  .feat-desc {
+    font-size: 15px; line-height: 1.85; color: var(--sub); margin-bottom: 24px;
+    opacity: 0; transform: translateY(16px);
+    transition: opacity 0.8s ease 0.4s, transform 0.8s ease 0.4s;
+  }
+  .feature-slide.revealed .feat-desc { opacity: 1; transform: translateY(0); }
+  .feat-desc strong { color: rgba(255,255,255,0.78); font-weight: 500; }
+
+  .feat-bullets {
+    list-style: none; display: flex; flex-direction: column; gap: 10px;
+    opacity: 0; transform: translateY(16px);
+    transition: opacity 0.8s ease 0.6s, transform 0.8s ease 0.6s;
+  }
+  .feature-slide.revealed .feat-bullets { opacity: 1; transform: translateY(0); }
+
+  .feat-bullets li {
+    font-size: 13px; color: rgba(255,255,255,0.45);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .feat-bullets li::before {
+    content: ''; width: 4px; height: 4px; border-radius: 50%;
+    background: var(--teal); flex-shrink: 0;
+  }
+
+  /* ══ SUMMARY ══ */
+  #summary { background: var(--black); }
+  #summary::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(to right, transparent, var(--teal-border), transparent);
+  }
+
+  .summary-inner { max-width: 1060px; width: 100%; padding: 0 60px; }
+
+  .sum-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 12px; text-align: center;
+    opacity: 0; transform: translateY(12px);
+    transition: opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s;
+  }
+  #summary.revealed .sum-label { opacity: 1; transform: translateY(0); }
+
+  .sum-headline {
+    font-size: clamp(22px, 3vw, 36px); font-weight: 700;
+    letter-spacing: -0.02em; color: #fff; text-align: center; margin-bottom: 44px;
+    opacity: 0; transform: translateY(12px);
+    transition: opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s;
+  }
+  #summary.revealed .sum-headline { opacity: 1; transform: translateY(0); }
+
+  .sum-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  .sum-card {
+    background: var(--teal-dim);
+    border: 1px solid var(--teal-border);
+    border-radius: 10px; padding: 28px 24px;
+    opacity: 0; transform: translateY(24px);
+  }
+  .sum-card:nth-child(1) { transition: opacity 0.7s ease 0.3s, transform 0.7s ease 0.3s; }
+  .sum-card:nth-child(2) { transition: opacity 0.7s ease 0.45s, transform 0.7s ease 0.45s; }
+  .sum-card:nth-child(3) { transition: opacity 0.7s ease 0.6s, transform 0.7s ease 0.6s; }
+  .sum-card:nth-child(4) { transition: opacity 0.7s ease 0.75s, transform 0.7s ease 0.75s; }
+  .sum-card:nth-child(5) { transition: opacity 0.7s ease 0.9s, transform 0.7s ease 0.9s; }
+  .sum-card:nth-child(6) { transition: opacity 0.7s ease 1.05s, transform 0.7s ease 1.05s; }
+  #summary.revealed .sum-card { opacity: 1; transform: translateY(0); }
+
+  .sum-icon { font-size: 22px; margin-bottom: 12px; display: block; }
+  .sum-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .sum-title span { color: var(--teal); }
+  .sum-body { font-size: 12px; line-height: 1.7; color: rgba(255,255,255,0.38); }
+
+  /* ══ CTA ══ */
+  #cta { background: var(--mid); text-align: center; }
+  #cta::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(to right, transparent, var(--teal-border), transparent);
+  }
+
+  .cta-inner {
+    max-width: 600px; padding: 0 40px;
+  }
+
+  .cta-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 16px;
+    opacity: 0; transition: opacity 0.6s ease 0.1s;
+  }
+  #cta.revealed .cta-label { opacity: 1; }
+
+  .cta-headline {
+    font-size: clamp(32px, 5vw, 60px); font-weight: 700;
+    letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 16px;
+    opacity: 0; transform: translateY(18px);
+    transition: opacity 0.8s ease 0.25s, transform 0.8s ease 0.25s;
+  }
+  #cta.revealed .cta-headline { opacity: 1; transform: translateY(0); }
+  .cta-headline span { color: var(--teal); }
+
+  .cta-sub {
+    font-size: 15px; color: var(--sub); line-height: 1.75; margin-bottom: 36px;
+    opacity: 0; transform: translateY(18px);
+    transition: opacity 0.8s ease 0.45s, transform 0.8s ease 0.45s;
+  }
+  #cta.revealed .cta-sub { opacity: 1; transform: translateY(0); }
+
+  .cta-buttons {
+    display: flex; gap: 14px; justify-content: center;
+    opacity: 0; transform: translateY(18px);
+    transition: opacity 0.8s ease 0.65s, transform 0.8s ease 0.65s;
+  }
+  #cta.revealed .cta-buttons { opacity: 1; transform: translateY(0); }
+
+  /* ─── BUTTONS ─── */
+  .btn-primary {
+    padding: 13px 34px; background: var(--teal); color: #000;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    border: none; border-radius: 3px; cursor: pointer; text-decoration: none;
+    transition: opacity 0.2s, transform 0.15s; display: inline-block;
+  }
+  .btn-primary:hover { opacity: 0.82; transform: translateY(-2px); }
+
+  .btn-outline {
+    padding: 13px 34px; background: transparent; color: rgba(255,255,255,0.6);
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,0.16); border-radius: 3px; cursor: pointer;
+    text-decoration: none; transition: border-color 0.2s, color 0.2s; display: inline-block;
+  }
+  .btn-outline:hover { border-color: var(--teal); color: var(--teal); }
+
+  /* ─── FOOTER ─── */
+  #footer { background: var(--black); border-top: 1px solid rgba(255,255,255,0.05); }
+  .footer-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; max-width: 1060px; padding: 0 60px;
+    opacity: 0; transform: translateY(14px);
+    transition: opacity 0.7s ease 0.2s, transform 0.7s ease 0.2s;
+  }
+  #footer.revealed .footer-inner { opacity: 1; transform: translateY(0); }
+
+  .footer-logo { font-size: 16px; font-weight: 700; color: var(--teal); letter-spacing: 0.08em; }
+  .footer-logo span { color: rgba(255,255,255,0.3); font-weight: 300; font-size: 12px; margin-left: 6px; }
+  .footer-copy { font-size: 11px; color: var(--muted); letter-spacing: 0.04em; }
+  .footer-back { font-size: 11px; color: var(--teal); text-decoration: none; letter-spacing: 0.08em; }
+  .footer-back:hover { opacity: 0.7; }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.3; transform: scaleY(0.8); }
+    50%       { opacity: 1;   transform: scaleY(1); }
+  }
+
+  /* ══ CHANGELOG ══ */
+  #changelog {
+    background: var(--black);
+    align-items: flex-start;
+    padding: 0 60px;
+    overflow-y: auto;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  #changelog::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(to right, transparent, var(--teal-border), transparent);
+  }
+
+  .changelog-inner { max-width: 860px; width: 100%; }
+
+  .cl-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 12px;
+    opacity: 0; transform: translateY(12px);
+    transition: opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s;
+  }
+  #changelog.revealed .cl-label { opacity: 1; transform: translateY(0); }
+
+  .cl-headline {
+    font-size: clamp(24px, 3.5vw, 40px); font-weight: 700;
+    letter-spacing: -0.02em; color: #fff; margin-bottom: 40px;
+    opacity: 0; transform: translateY(12px);
+    transition: opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s;
+  }
+  #changelog.revealed .cl-headline { opacity: 1; transform: translateY(0); }
+
+  .cl-entry {
+    border: 1px solid var(--teal-border);
+    border-radius: 10px;
+    padding: 28px 32px;
+    margin-bottom: 16px;
+    background: var(--teal-dim);
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.7s ease 0.3s, transform 0.7s ease 0.3s;
+  }
+  #changelog.revealed .cl-entry { opacity: 1; transform: translateY(0); }
+
+  .cl-version-row {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
+  }
+
+  .cl-version {
+    font-size: 13px; font-weight: 700; color: var(--teal);
+    letter-spacing: 0.05em;
+  }
+
+  .cl-badge {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 20px;
+    background: rgba(28,204,204,0.1); color: var(--teal);
+    border: 1px solid var(--teal-border);
+  }
+
+  .cl-date {
+    font-size: 11px; color: rgba(255,255,255,0.3);
+    margin-left: auto;
+  }
+
+  .cl-title {
+    font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+
+  .cl-desc {
+    font-size: 13px; line-height: 1.75; color: rgba(255,255,255,0.45);
+    margin-bottom: 18px;
+  }
+
+  .cl-items {
+    list-style: none; display: flex; flex-direction: column; gap: 7px;
+  }
+
+  .cl-items li {
+    font-size: 12px; color: rgba(255,255,255,0.45);
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+
+  .cl-items li::before {
+    content: ''; width: 4px; height: 4px; border-radius: 50%;
+    background: var(--teal); flex-shrink: 0; margin-top: 5px;
+  }
+
+  /* ══ FOOTER ══ */
+  #site-footer {
+    background: #060a0a;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding: 44px 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative; z-index: 10;
+  }
+
+  .footer-logo { font-size: 16px; font-weight: 700; color: var(--teal); letter-spacing: 0.08em; }
+  .footer-logo span { color: rgba(255,255,255,0.3); font-weight: 300; font-size: 12px; margin-left: 6px; }
+  .footer-copy { font-size: 11px; color: rgba(255,255,255,0.22); letter-spacing: 0.04em; }
+  .footer-back { font-size: 11px; color: var(--teal); text-decoration: none; letter-spacing: 0.08em; }
+  .footer-back:hover { opacity: 0.7; }
+
+  /* ══ FEATURE SLIDE EFFECTS ══ */
+  .feature-slide::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 50% 60% at 10% 50%, rgba(28,204,204,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 30% 40% at 90% 20%, rgba(28,204,204,0.03) 0%, transparent 60%);
+  }
+
+  .feat-icon-glow {
+    position: absolute;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(28,204,204,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    top: 50%; left: 8%;
+    transform: translateY(-50%);
+  }
+
+  .feature-slide.reverse-glow .feat-icon-glow {
+    left: auto; right: 8%;
+  }
+
+  /* Feature number large background watermark */
+  .feat-bg-number {
+    position: absolute;
+    font-size: 280px; font-weight: 900;
+    color: rgba(28,204,204,0.025);
+    letter-spacing: -0.05em;
+    line-height: 1;
+    pointer-events: none;
+    right: -20px; bottom: -40px;
+    user-select: none;
+  }
+
+  .feature-inner.reverse ~ .feat-bg-number {
+    right: auto; left: -20px;
+  }
+
+  /* Corner accent lines */
+  .feat-corner {
+    position: absolute;
+    width: 40px; height: 40px;
+    pointer-events: none;
+    opacity: 0.3;
+  }
+  .feat-corner-tl { top: 24px; left: 24px; border-top: 1px solid var(--teal); border-left: 1px solid var(--teal); }
+  .feat-corner-br { bottom: 24px; right: 24px; border-bottom: 1px solid var(--teal); border-right: 1px solid var(--teal); }
+
+  /* ══ SUMMARY EFFECTS ══ */
+  #summary::after {
+    content: '';
+    position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 100%, rgba(28,204,204,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 30% 30% at 10% 10%, rgba(28,204,204,0.03) 0%, transparent 60%);
+  }
+  #summary .feat-corner-tl { top: 24px; left: 24px; }
+  #summary .feat-corner-br { bottom: 24px; right: 24px; }
+
+  /* ══ CTA EFFECTS ══ */
+  #cta::after {
+    content: '';
+    position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 70% 70% at 50% 50%, rgba(28,204,204,0.05) 0%, transparent 65%),
+      radial-gradient(ellipse 30% 30% at 90% 90%, rgba(28,204,204,0.03) 0%, transparent 60%);
+  }
+  #cta .feat-corner-tl { top: 24px; left: 24px; }
+  #cta .feat-corner-br { bottom: 24px; right: 24px; }
+
+  /* CTA bg watermark */
+  .cta-bg-text {
+    position: absolute;
+    font-size: 200px; font-weight: 900;
+    color: rgba(28,204,204,0.025);
+    letter-spacing: -0.05em;
+    pointer-events: none;
+    right: -10px; bottom: -30px;
+    user-select: none; line-height: 1;
+  }
+
+  /* ══ CHANGELOG inside CTA ══ */
+  .cta-divider {
+    width: 100%; height: 1px;
+    background: linear-gradient(to right, transparent, rgba(28,204,204,0.2), transparent);
+    margin: 44px 0 36px;
+  }
+
+  .cta-cl-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 12px; text-align: left;
+    opacity: 0; transform: translateY(12px);
+    transition: opacity 0.6s ease 0.7s, transform 0.6s ease 0.7s;
+  }
+  #cta.revealed .cta-cl-label { opacity: 1; transform: translateY(0); }
+
+  .cta-cl-entry {
+    border: 1px solid var(--teal-border);
+    border-radius: 10px; padding: 24px 28px;
+    background: rgba(28,204,204,0.04);
+    text-align: left;
+    opacity: 0; transform: translateY(16px);
+    transition: opacity 0.7s ease 0.85s, transform 0.7s ease 0.85s;
+  }
+  #cta.revealed .cta-cl-entry { opacity: 1; transform: translateY(0); }
+
+  .cta-cl-version-row {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+  }
+  .cta-cl-version { font-size: 13px; font-weight: 700; color: var(--teal); letter-spacing: 0.05em; }
+  .cta-cl-badge {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 20px;
+    background: rgba(28,204,204,0.1); color: var(--teal); border: 1px solid var(--teal-border);
+  }
+  .cta-cl-date { font-size: 11px; color: rgba(255,255,255,0.3); margin-left: auto; }
+  .cta-cl-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .cta-cl-desc { font-size: 13px; line-height: 1.7; color: rgba(255,255,255,0.4); margin-bottom: 14px; }
+  .cta-cl-items { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .cta-cl-items li { font-size: 12px; color: rgba(255,255,255,0.4); display: flex; align-items: flex-start; gap: 9px; }
+  .cta-cl-items li::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--teal); flex-shrink: 0; margin-top: 5px; }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-logo">KYVERA <span>by ARX</span></div>
+  <ul class="nav-links">
+    <li><a onclick="goTo('features-1')">Features</a></li>
+    <li><a onclick="goTo('summary')">Overview</a></li>
+    <li><a onclick="goTo('cta')">Early Access</a></li>
+    <li><a href="index.html" class="nav-back">← ARX</a></li>
+  </ul>
+</nav>
+
+<div id="scroller">
+
+  <!-- ══ HERO ══ -->
+  <div class="slide" id="hero">
+    <svg class="zz zz-left" width="28" viewBox="0 0 28 600" fill="none">
+      <line x1="24" y1="0" x2="24" y2="600" stroke="#1ccccc" stroke-width="0.75" opacity="0.2"/>
+      <line x1="24" y1="60"  x2="16" y2="60"  stroke="#1ccccc" stroke-width="1" opacity="0.4"/>
+      <line x1="24" y1="120" x2="10" y2="120" stroke="#1ccccc" stroke-width="1" opacity="0.6"/>
+      <circle cx="10" cy="120" r="2" fill="#1ccccc" opacity="0.6"/>
+      <line x1="24" y1="180" x2="16" y2="180" stroke="#1ccccc" stroke-width="1" opacity="0.4"/>
+      <line x1="24" y1="240" x2="10" y2="240" stroke="#1ccccc" stroke-width="1" opacity="0.6"/>
+      <circle cx="10" cy="240" r="2" fill="#1ccccc" opacity="0.6"/>
+      <line x1="24" y1="300" x2="4"  y2="300" stroke="#1ccccc" stroke-width="1.5" opacity="0.9"/>
+      <circle cx="4" cy="300" r="3" fill="#1ccccc" opacity="0.8"/>
+      <line x1="24" y1="360" x2="10" y2="360" stroke="#1ccccc" stroke-width="1" opacity="0.6"/>
+      <circle cx="10" cy="360" r="2" fill="#1ccccc" opacity="0.6"/>
+      <line x1="24" y1="420" x2="16" y2="420" stroke="#1ccccc" stroke-width="1" opacity="0.4"/>
+      <line x1="24" y1="480" x2="10" y2="480" stroke="#1ccccc" stroke-width="1" opacity="0.6"/>
+      <circle cx="10" cy="480" r="2" fill="#1ccccc" opacity="0.6"/>
+      <line x1="24" y1="540" x2="16" y2="540" stroke="#1ccccc" stroke-width="1" opacity="0.4"/>
+    </svg>
+    <svg class="zz zz-right" width="28" viewBox="0 0 28 600" fill="none">
+      <line x1="4" y1="0" x2="4" y2="600" stroke="#1ccccc" stroke-width="0.75" opacity="0.2"/>
+      <line x1="4" y1="60"  x2="12" y2="60"  stroke="#1ccccc" stroke-width="1" opacity="0.4"/>
+      <line x1="4" y1="120" x2="18" y2="120" stroke="#1ccccc" stroke-width="1" opacity="0.6"/>
+      <circle cx="18" cy="120" r="2" fill="#1ccccc" opacity="0.6"/>
+      <line x1="4" y1="180" x2="12" y2="180" stroke="#1ccccc" stroke-width="1" opacity="0.4"/>
+      <line x1="4" y1="240" x2="18" y2="240" stroke="#1ccccc" stroke-width="1" opacity="0.6"/>
+      <circle cx="18" cy="240" r="2" fill="#1ccccc" opacity="0.6"/>
+      <line x1="4" y1="300" x2="24" y2="300" stroke="#1ccccc" stroke-width="1.5" opacity="0.9"/>
+      <circle cx="24" cy="300" r="3" fill="#1ccccc" opacity="0.8"/>
+      <line x1="4" y1="360" x2="18" y2="360" stroke="#1ccccc" stroke-width="1" opacity="0.6"/>
+      <circle cx="18" cy="360" r="2" fill="#1ccccc" opacity="0.6"/>
+      <line x1="4" y1="420" x2="12" y2="420" stroke="#1ccccc" stroke-width="1" opacity="0.4"/>
+      <line x1="4" y1="480" x2="18" y2="480" stroke="#1ccccc" stroke-width="1" opacity="0.6"/>
+      <circle cx="18" cy="480" r="2" fill="#1ccccc" opacity="0.6"/>
+      <line x1="4" y1="540" x2="12" y2="540" stroke="#1ccccc" stroke-width="1" opacity="0.4"/>
+    </svg>
+
+    <div class="hero-wordmark">
+      <p class="wordmark-by">by ARX</p>
+      <h1 class="wordmark-name">KYVERA</h1>
+    </div>
+    <p class="hero-eyebrow">Run everything. Own everything.</p>
+    <h2 class="hero-headline">The <span>all-in-one</span> server<br>management platform</h2>
+    <p class="hero-sub">Media hosting, ad blocking, VPN, file storage, and AI — all running on your own hardware. One install. Full control.</p>
+    <div class="hero-cta">
+      <a onclick="goTo('cta')" class="btn-primary">Get early access</a>
+      <a onclick="goTo('features-1')" class="btn-outline">See features</a>
+    </div>
+    <div class="scroll-hint">
+      <span>Scroll</span>
+      <div class="scroll-line"></div>
+    </div>
+  </div>
+
+  <!-- ══ FEATURE 1 — Media Hosting ══ -->
+  <div class="slide feature-slide " id="features-1">
+    <div class="feat-corner feat-corner-tl"></div>
+    <div class="feat-corner feat-corner-br"></div>
+    <div class="feat-icon-glow"></div>
+    <div class="feat-bg-number">01</div>
+    <div class="feature-inner">
+      <div class="feature-left">
+        <p class="feat-number">01 — Feature</p>
+        <div class="feat-icon">🎬</div>
+        <h2 class="feat-title">Your own<br><span>media server</span></h2>
+        <div class="feat-line"></div>
+      </div>
+      <div class="feature-right">
+        <p class="feat-desc">Stream your own movies and TV series from anywhere on your network. <strong>No subscriptions. No licensing restrictions. No buffering from an overloaded CDN.</strong> Just your content, served your way.</p>
+        <ul class="feat-bullets">
+          <li>Stream movies and series in full quality</li>
+          <li>Automatic metadata, posters and subtitles</li>
+          <li>Multi-user support with individual libraries</li>
+          <li>Access from any device on your network</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FEATURE 2 — Ad Blocking ══ -->
+  <div class="slide feature-slide reverse-glow" id="features-2">
+    <div class="feat-corner feat-corner-tl"></div>
+    <div class="feat-corner feat-corner-br"></div>
+    <div class="feat-icon-glow"></div>
+    <div class="feat-bg-number">02</div>
+    <div class="feature-inner reverse">
+      <div class="feature-left">
+        <p class="feat-number">02 — Feature</p>
+        <div class="feat-icon">🛡️</div>
+        <h2 class="feat-title">Network-wide<br><span>ad blocking</span></h2>
+        <div class="feat-line"></div>
+      </div>
+      <div class="feature-right">
+        <p class="feat-desc">Block ads, trackers and malicious domains <strong>across every device on your network</strong> — phones, tablets, smart TVs, laptops. No browser extension needed. If it's on your network, it's protected.</p>
+        <ul class="feat-bullets">
+          <li>DNS-level blocking — no extensions required</li>
+          <li>Custom blocklists and whitelists</li>
+          <li>Real-time query logs and statistics</li>
+          <li>Covers every device automatically</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FEATURE 3 — File Storage ══ -->
+  <div class="slide feature-slide " id="features-3">
+    <div class="feat-corner feat-corner-tl"></div>
+    <div class="feat-corner feat-corner-br"></div>
+    <div class="feat-icon-glow"></div>
+    <div class="feat-bg-number">03</div>
+    <div class="feature-inner">
+      <div class="feature-left">
+        <p class="feat-number">03 — Feature</p>
+        <div class="feat-icon">🗄️</div>
+        <h2 class="feat-title">Personal<br><span>cloud storage</span></h2>
+        <div class="feat-line"></div>
+      </div>
+      <div class="feature-right">
+        <p class="feat-desc">Your own private cloud. <strong>Store, access and share files from anywhere</strong> without paying a monthly fee to Dropbox or Google Drive. Your files live on your hardware, not someone else's.</p>
+        <ul class="feat-bullets">
+          <li>Access files from any device</li>
+          <li>Automatic photo and document backup</li>
+          <li>Granular sharing and permissions</li>
+          <li>No storage limits beyond your own hardware</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FEATURE 4 — VPN ══ -->
+  <div class="slide feature-slide reverse-glow" id="features-4">
+    <div class="feat-corner feat-corner-tl"></div>
+    <div class="feat-corner feat-corner-br"></div>
+    <div class="feat-icon-glow"></div>
+    <div class="feat-bg-number">04</div>
+    <div class="feature-inner reverse">
+      <div class="feature-left">
+        <p class="feat-number">04 — Feature</p>
+        <div class="feat-icon">🔐</div>
+        <h2 class="feat-title">Self-hosted<br><span>VPN</span></h2>
+        <div class="feat-line"></div>
+      </div>
+      <div class="feature-right">
+        <p class="feat-desc">Connect securely to your home network from anywhere in the world. <strong>Access your Kyvera server, your files, your media</strong> — as if you never left home. Built on WireGuard, the fastest modern VPN protocol.</p>
+        <ul class="feat-bullets">
+          <li>WireGuard — fast, modern, secure</li>
+          <li>Access your full Kyvera setup remotely</li>
+          <li>Simple client setup on any device</li>
+          <li>No third party VPN provider needed</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FEATURE 5 — AI ══ -->
+  <div class="slide feature-slide " id="features-5">
+    <div class="feat-corner feat-corner-tl"></div>
+    <div class="feat-corner feat-corner-br"></div>
+    <div class="feat-icon-glow"></div>
+    <div class="feat-bg-number">05</div>
+    <div class="feature-inner">
+      <div class="feature-left">
+        <p class="feat-number">05 — Feature</p>
+        <div class="feat-icon">🤖</div>
+        <h2 class="feat-title">Meet<br><span>Theo</span></h2>
+        <div class="feat-line"></div>
+      </div>
+      <div class="feature-right">
+        <p class="feat-desc">Every Kyvera installation comes with Theo — <strong>your own locally hosted AI assistant.</strong> Monitor your server, summarise documents, answer questions, and get things done. All running on your hardware, never touching the cloud.</p>
+        <ul class="feat-bullets">
+          <li>Server health monitoring and alerts</li>
+          <li>Document and file summarisation</li>
+          <li>Natural language server management</li>
+          <li>Runs entirely on your own hardware</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SUMMARY ══ -->
+  <div class="slide" id="summary">
+    <div class="feat-corner feat-corner-tl"></div>
+    <div class="feat-corner feat-corner-br"></div>
+    <div class="summary-inner">
+      <p class="sum-label">Everything included</p>
+      <h2 class="sum-headline">One install. Six powerful features.</h2>
+      <div class="sum-grid">
+        <div class="sum-card">
+          <span class="sum-icon">🎬</span>
+          <h3 class="sum-title"><span>Media</span> hosting</h3>
+          <p class="sum-body">Stream your own movies and series in full quality from your own hardware.</p>
+        </div>
+        <div class="sum-card">
+          <span class="sum-icon">🛡️</span>
+          <h3 class="sum-title">Network <span>ad blocking</span></h3>
+          <p class="sum-body">Block ads and trackers across every device on your network automatically.</p>
+        </div>
+        <div class="sum-card">
+          <span class="sum-icon">🗄️</span>
+          <h3 class="sum-title">File <span>storage</span></h3>
+          <p class="sum-body">Your own private cloud. No monthly fees, no storage limits beyond your own hardware.</p>
+        </div>
+        <div class="sum-card">
+          <span class="sum-icon">🔐</span>
+          <h3 class="sum-title">Self-hosted <span>VPN</span></h3>
+          <p class="sum-body">Secure remote access to your Kyvera server from anywhere in the world.</p>
+        </div>
+        <div class="sum-card">
+          <span class="sum-icon">🤖</span>
+          <h3 class="sum-title">AI via <span>Theo</span></h3>
+          <p class="sum-body">Your own locally hosted AI assistant. No cloud, no subscriptions, no data leaving your home.</p>
+        </div>
+        <div class="sum-card">
+          <span class="sum-icon">📊</span>
+          <h3 class="sum-title">Server <span>dashboard</span></h3>
+          <p class="sum-body">Monitor everything from one clean dashboard. CPU, RAM, storage, network — all in one place.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CTA + CHANGELOG ══ -->
+  <div class="slide" id="cta">
+    <div class="feat-corner feat-corner-tl"></div>
+    <div class="feat-corner feat-corner-br"></div>
+    <div class="cta-bg-text">v0.1</div>
+    <div class="cta-inner" style="max-width:760px; text-align:center;">
+      <p class="cta-label">Early access</p>
+      <h2 class="cta-headline">Be the first to<br><span>run Kyvera</span></h2>
+      <p class="cta-sub">Kyvera is currently in development. Sign up for early access and be first in line when we launch.</p>
+      <div class="cta-buttons">
+        <a href="#" class="btn-primary">Join early access</a>
+        <a href="index.html" class="btn-outline">← Back to ARX</a>
+      </div>
+
+      <div class="cta-divider"></div>
+
+      <p class="cta-cl-label">Release notes</p>
+      <div class="cta-cl-entry">
+        <div class="cta-cl-version-row">
+          <span class="cta-cl-version">v0.1.0</span>
+          <span class="cta-cl-badge">Initial release</span>
+          <span class="cta-cl-date">2025</span>
+        </div>
+        <h3 class="cta-cl-title">Kyvera — First build</h3>
+        <p class="cta-cl-desc">The first version of Kyvera establishes the core platform — a self-hosted server management suite that brings together everything you need in one clean install.</p>
+        <ul class="cta-cl-items">
+          <li>Media server — stream your own movies and TV series in full quality across your local network</li>
+          <li>Network-wide ad blocking — DNS-level blocking across every device connected to your network</li>
+          <li>Personal cloud storage — store, access and share your files without any third party cloud service</li>
+          <li>Self-hosted VPN via WireGuard — secure remote access to your Kyvera server from anywhere</li>
+          <li>Theo AI assistant — locally hosted AI for server monitoring, diagnostics and natural language control</li>
+          <li>Server dashboard — real-time monitoring of CPU, RAM, GPU, storage and network from one interface</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer id="site-footer">
+  <div class="footer-logo">KYVERA <span>by ARX</span></div>
+  <p class="footer-copy">&copy; 2025 ARX. All rights reserved.</p>
+  <a href="index.html" class="footer-back">← ARX</a>
+</footer>
+
+<script>
+  const nav    = document.getElementById('nav');
+  const sc     = document.getElementById('scroller');
+  const slides = document.querySelectorAll('.slide');
+
+  const revealDurations = {
+    'hero':        2000,
+    'features-1':  1400,
+    'features-2':  1400,
+    'features-3':  1400,
+    'features-4':  1400,
+    'features-5':  1400,
+    'summary':     1800,
+    'cta':         1800,
+  };
+
+  let locked = false;
+
+  function reveal(id) {
+    const el = document.getElementById(id);
+    if (el && !el.classList.contains('revealed')) el.classList.add('revealed');
+  }
+
+  function goTo(id) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function blockScroll(e) { if (locked) e.preventDefault(); }
+  sc.addEventListener('wheel',     blockScroll, { passive: false });
+  sc.addEventListener('touchmove', blockScroll, { passive: false });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !entry.target.classList.contains('revealed')) {
+        const id  = entry.target.id;
+        const dur = revealDurations[id] || 1000;
+        locked = true;
+        reveal(id);
+        setTimeout(() => { locked = false; }, dur);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  slides.forEach(s => observer.observe(s));
+
+  sc.addEventListener('scroll', () => {
+    nav.classList.toggle('visible', sc.scrollTop > 80);
+  }, { passive: true });
+
+  window.addEventListener('load', () => { reveal('hero'); });
+</script>
+
+</body>
+</html>
