@@ -369,6 +369,152 @@
     transition: opacity 0.8s ease 0.65s, transform 0.8s ease 0.65s;
   }
   #hero.revealed .hero-translation { opacity: 1; transform: translateY(0); }
+
+  /* ══ ROADMAP ══ */
+  #roadmap { background: var(--mid); }
+  #roadmap::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(to right, transparent, rgba(0,255,153,0.25), transparent);
+  }
+  #roadmap::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse 50% 60% at 20% 50%, rgba(0,255,153,0.04) 0%, transparent 60%);
+  }
+
+  .roadmap-inner { max-width: 700px; width: 100%; padding: 0 48px; position: relative; z-index: 1; }
+
+  .rm-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--green); margin-bottom: 12px;
+    opacity: 0; transform: translateY(12px);
+    transition: opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s;
+  }
+  #roadmap.revealed .rm-label { opacity: 1; transform: translateY(0); }
+
+  .rm-headline {
+    font-size: clamp(28px, 4vw, 46px); font-weight: 700;
+    letter-spacing: -0.025em; color: #fff; margin-bottom: 44px;
+    opacity: 0; transform: translateY(12px);
+    transition: opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s;
+  }
+  #roadmap.revealed .rm-headline { opacity: 1; transform: translateY(0); }
+
+  .rm-items { display: flex; flex-direction: column; gap: 0; }
+
+  .rm-item {
+    display: flex; gap: 24px; align-items: flex-start; padding-bottom: 32px;
+    opacity: 0; transform: translateY(20px);
+  }
+  .rm-item:nth-child(1) { transition: opacity 0.7s ease 0.35s, transform 0.7s ease 0.35s; }
+  .rm-item:nth-child(2) { transition: opacity 0.7s ease 0.55s, transform 0.7s ease 0.55s; }
+  .rm-item:nth-child(3) { transition: opacity 0.7s ease 0.75s, transform 0.7s ease 0.75s; }
+  #roadmap.revealed .rm-item { opacity: 1; transform: translateY(0); }
+
+  .rm-line-col { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+  .rm-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+  .rm-dot.active { background: var(--green); box-shadow: 0 0 8px rgba(0,255,153,0.5); }
+  .rm-dot.soon { background: rgba(0,255,153,0.25); border: 1px solid rgba(0,255,153,0.5); }
+  .rm-dot.future { background: transparent; border: 1px solid rgba(255,255,255,0.15); }
+  .rm-connector { width: 1px; flex: 1; background: rgba(0,255,153,0.15); min-height: 40px; }
+
+  .rm-tag {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .rm-tag.active { color: var(--green); }
+  .rm-tag.soon { color: rgba(0,255,153,0.5); }
+  .rm-tag.future { color: rgba(255,255,255,0.25); }
+
+  .rm-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .rm-title.active { color: #fff; }
+  .rm-title.soon { color: rgba(255,255,255,0.55); }
+  .rm-title.future { color: rgba(255,255,255,0.28); }
+
+  .rm-desc { font-size: 13px; line-height: 1.65; }
+  .rm-desc.active { color: rgba(255,255,255,0.45); }
+  .rm-desc.soon { color: rgba(255,255,255,0.3); }
+  .rm-desc.future { color: rgba(255,255,255,0.18); }
+
+  /* ══ CONTACT FOOTER (regular scroll) ══ */
+  #contact-footer {
+    background: var(--darker);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 64px 60px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: start;
+  }
+
+  .cf-left { }
+
+  .cf-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--green); margin-bottom: 14px;
+    opacity: 0; transform: translateY(14px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .cf-label.visible { opacity: 1; transform: translateY(0); }
+
+  .cf-headline {
+    font-size: clamp(24px, 3.5vw, 38px); font-weight: 700;
+    letter-spacing: -0.02em; color: #fff; margin-bottom: 12px;
+    opacity: 0; transform: translateY(14px);
+    transition: opacity 0.7s ease 0.1s, transform 0.7s ease 0.1s;
+  }
+  .cf-headline.visible { opacity: 1; transform: translateY(0); }
+
+  .cf-sub {
+    font-size: 14px; color: rgba(255,255,255,0.4); line-height: 1.75; margin-bottom: 28px;
+    opacity: 0; transform: translateY(14px);
+    transition: opacity 0.7s ease 0.2s, transform 0.7s ease 0.2s;
+  }
+  .cf-sub.visible { opacity: 1; transform: translateY(0); }
+
+  .cf-email {
+    font-size: 13px; color: var(--green); text-decoration: none;
+    border-bottom: 1px solid rgba(0,255,153,0.3); padding-bottom: 2px;
+    transition: opacity 0.2s;
+    opacity: 0;
+    transition: opacity 0.7s ease 0.3s, transform 0.7s ease 0.3s;
+    transform: translateY(14px);
+    display: inline-block;
+  }
+  .cf-email.visible { opacity: 1; transform: translateY(0); }
+  .cf-email:hover { opacity: 0.7; }
+
+  .cf-right {
+    display: flex; flex-direction: column; gap: 12px;
+    opacity: 0; transform: translateY(14px);
+    transition: opacity 0.7s ease 0.25s, transform 0.7s ease 0.25s;
+  }
+  .cf-right.visible { opacity: 1; transform: translateY(0); }
+
+  .cf-input {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(0,255,153,0.15);
+    border-radius: 4px; padding: 12px 16px; color: #fff;
+    font-size: 13px; outline: none; font-family: inherit; width: 100%;
+    transition: border-color 0.2s;
+  }
+  .cf-input:focus { border-color: rgba(0,255,153,0.4); }
+  .cf-textarea { resize: none; }
+
+  .cf-btn {
+    background: var(--green); color: #000; border: none; border-radius: 3px;
+    padding: 13px; font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; cursor: pointer; transition: opacity 0.2s;
+  }
+  .cf-btn:hover { opacity: 0.82; }
+
+  .cf-bottom {
+    grid-column: 1 / -1; border-top: 1px solid rgba(255,255,255,0.05);
+    padding-top: 28px; display: flex; justify-content: space-between; align-items: center;
+    opacity: 0; transform: translateY(10px);
+    transition: opacity 0.7s ease 0.5s, transform 0.7s ease 0.5s;
+  }
+  .cf-bottom.visible { opacity: 1; transform: translateY(0); }
+  .cf-copy { font-size: 11px; color: rgba(255,255,255,0.2); }
+  .cf-brand { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.15); letter-spacing: 0.1em; }
 </style>
 </head>
 <body>
@@ -379,6 +525,8 @@
     <li><a onclick="goTo('hero')">Home</a></li>
     <li><a onclick="goTo('about-1')">About</a></li>
     <li><a onclick="goTo('products')">Products</a></li>
+    <li><a onclick="goTo('roadmap')">Roadmap</a></li>
+    <li><a onclick="document.getElementById('contact-footer').scrollIntoView({behavior:'smooth'})">Contact</a></li>
     <li><a href="#" style="color: var(--green); border: 1px solid rgba(0,255,153,0.3); padding: 6px 16px; border-radius: 3px;">Dashboard</a></li>
   </ul>
 </nav>
@@ -481,6 +629,73 @@
     </div>
   </div>
 
+
+  <!-- ══ ROADMAP ══ -->
+  <div class="slide" id="roadmap">
+    <div class="roadmap-inner">
+      <p class="rm-label">What's coming</p>
+      <h2 class="rm-headline">The road ahead</h2>
+      <div class="rm-items">
+
+        <div class="rm-item">
+          <div class="rm-line-col">
+            <div class="rm-dot active"></div>
+            <div class="rm-connector"></div>
+          </div>
+          <div>
+            <p class="rm-tag active">Now — In development</p>
+            <h3 class="rm-title active">ARX Kyvera</h3>
+            <p class="rm-desc active">All-in-one self-hosted server platform. Media hosting, ad blocking, VPN, file storage, and Theo — your local AI assistant.</p>
+          </div>
+        </div>
+
+        <div class="rm-item">
+          <div class="rm-line-col">
+            <div class="rm-dot soon"></div>
+            <div class="rm-connector"></div>
+          </div>
+          <div>
+            <p class="rm-tag soon">Next up</p>
+            <h3 class="rm-title soon">ARX Link</h3>
+            <p class="rm-desc soon">Mobile companion app for Kyvera. Access your server, files, and AI from anywhere — as if you never left home.</p>
+          </div>
+        </div>
+
+        <div class="rm-item">
+          <div class="rm-line-col">
+            <div class="rm-dot future"></div>
+          </div>
+          <div>
+            <p class="rm-tag future">On the horizon</p>
+            <h3 class="rm-title future">???</h3>
+            <p class="rm-desc future">The next ARX product. Details to be announced.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ CONTACT FOOTER (regular scroll) ══ -->
+<div id="contact-footer">
+  <div class="cf-left">
+    <p class="cf-label cf-fade">Get in touch</p>
+    <h2 class="cf-headline cf-fade">Let's talk</h2>
+    <p class="cf-sub cf-fade">Interested in early access, a partnership, or just want to know more about what we're building?</p>
+    <a href="mailto:hello@arx.software" class="cf-email cf-fade">hello@arx.software</a>
+  </div>
+  <div class="cf-right cf-fade">
+    <input class="cf-input" type="text" placeholder="Your name">
+    <input class="cf-input" type="email" placeholder="Email address">
+    <textarea class="cf-textarea cf-input" rows="4" placeholder="Your message"></textarea>
+    <button class="cf-btn">Send message</button>
+  </div>
+  <div class="cf-bottom cf-fade">
+    <p class="cf-copy">&copy; 2025 ARX. All rights reserved. Arx Tua, Lex Tua.</p>
+    <span class="cf-brand">ARX</span>
+  </div>
 </div>
 
 <script>
@@ -492,6 +707,7 @@
     'hero':          2000,
     'about-summary': 1600,
     'products':      1400,
+    'roadmap':       1400,
   };
 
   let locked = false;
@@ -532,6 +748,18 @@
   }, { passive: true });
 
   window.addEventListener('load', () => { reveal('hero'); });
+
+  // Contact footer fade-in on scroll
+  const cfEls = document.querySelectorAll('.cf-fade');
+  const cfObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        cfObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.2 });
+  cfEls.forEach(el => cfObserver.observe(el));
 </script>
 
 </body>
